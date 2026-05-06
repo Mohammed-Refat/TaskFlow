@@ -7,7 +7,7 @@ public class TaskItem
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public TaskItemStatus Status { get; set; } = TaskItemStatus.Todo;
+    public TaskItemStatus Status { get; set; } = TaskItemStatus.ToDo;
     public TaskItemPriority Priority { get; set; } = TaskItemPriority.Medium;
     public DateTime? DueDate { get; set; }
     public bool IsDeleted { get; set; } = false;

@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;   // Add this for UseSwaggerUI extension method
 using Swashbuckle.AspNetCore.SwaggerUI;
-using TaskFlow.Core.Options; // Add this if you need to reference SwaggerUIOptions
+using TaskFlow.Core.Entities;
+using TaskFlow.Core.Options;
+using TaskFlow.Infrastructure.Data; // Add this if you need to reference SwaggerUIOptions
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +26,27 @@ builder.Services.AddControllers();
 // ── Options ────────────────────────────────────────────────
 builder.Services.Configure<JwtOptions>(
     builder.Configuration.GetSection(JwtOptions.SectionName));
+
+
+// ── Database ────────────────────────────────────────────────
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
+           .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+           .EnableDetailedErrors(builder.Environment.IsDevelopment()));
+
+
+// ── Identity ────────────────────────────────────────────────
+builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+{
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.User.RequireUniqueEmail = true;
+})
+
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
 
 // ── Swagger ────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
