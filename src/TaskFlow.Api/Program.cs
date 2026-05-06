@@ -7,8 +7,10 @@ using Serilog;
 using Swashbuckle.AspNetCore.Swagger;   // Add this for UseSwaggerUI extension method
 using Swashbuckle.AspNetCore.SwaggerUI;
 using TaskFlow.Core.Entities;
+using TaskFlow.Core.Interfaces;
 using TaskFlow.Core.Options;
-using TaskFlow.Infrastructure.Data; // Add this if you need to reference SwaggerUIOptions
+using TaskFlow.Infrastructure.Data;
+using TaskFlow.Infrastructure.Services; // Add this if you need to reference SwaggerUIOptions
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +49,10 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
+
+
+// ── Services ────────────────────────────────────────────────
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 // ── Swagger ────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
