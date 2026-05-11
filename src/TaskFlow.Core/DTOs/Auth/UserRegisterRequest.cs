@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TaskFlow.Core.DTOs.Auth
 {
-    public class RegisterRequest
+    public class UserRegisterRequest
     {
         public string FirstName { get; set; } = string.Empty; // string.Empty is used to avoid null reference issues
         public string LastName { get; set; } = string.Empty;
