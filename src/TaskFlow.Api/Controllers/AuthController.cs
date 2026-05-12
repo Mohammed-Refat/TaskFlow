@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.JSInterop.Infrastructure;
 using TaskFlow.Core.DTOs.Auth;
 using TaskFlow.Core.Entities;
 using TaskFlow.Core.Interfaces;
@@ -50,6 +51,26 @@ namespace TaskFlow.Api.Controllers
             };
 
             return Ok(response);
+        }
+
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
+        {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
+                return Unauthorized("Invalid email or password.");
+
+            var token = _tokenService.GenerateAccessToken(user);
+            var response = new AuthResponse
+            {
+                AccessToken = token,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+            };
+
+            return Ok(response);
+
+
         }
 
 

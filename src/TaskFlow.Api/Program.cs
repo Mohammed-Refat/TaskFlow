@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using Swashbuckle.AspNetCore.Swagger;   // Add this for UseSwaggerUI extension method
-using Swashbuckle.AspNetCore.SwaggerUI;
+using System.Text;
 using TaskFlow.Core.Entities;
 using TaskFlow.Core.Interfaces;
 using TaskFlow.Core.Options;
 using TaskFlow.Infrastructure.Data;
 using TaskFlow.Infrastructure.Services; // Add this if you need to reference SwaggerUIOptions
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +21,20 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 // ── Controllers ────────────────────────────────────────────
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
 
 // ── Options ────────────────────────────────────────────────
@@ -31,6 +43,7 @@ builder.Services.Configure<JwtOptions>(
 
 
 // ── Database ────────────────────────────────────────────────
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
            .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
@@ -38,6 +51,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 // ── Identity ────────────────────────────────────────────────
+
+
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 8;
@@ -49,6 +64,29 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
+
+
+// ── Authentication ──────────────────────────────────────────
+var jwtSettings = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings!.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+    };
+});
 
 
 // ── Services ────────────────────────────────────────────────
@@ -94,7 +132,12 @@ builder.Services.AddSwaggerGen(options =>
 // ── Build ──────────────────────────────────────────────────
 var app = builder.Build();
 
+Console.WriteLine("App built successfully");
+
 // ── Middleware pipeline ────────────────────────────────────
+
+Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -103,6 +146,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
