@@ -132,11 +132,9 @@ builder.Services.AddSwaggerGen(options =>
 // ── Build ──────────────────────────────────────────────────
 var app = builder.Build();
 
-Console.WriteLine("App built successfully");
 
 // ── Middleware pipeline ────────────────────────────────────
 
-Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 
 if (app.Environment.IsDevelopment())
 {
