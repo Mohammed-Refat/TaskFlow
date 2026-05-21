@@ -35,6 +35,16 @@ public class TaskRepository : ITaskRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<TaskItem?> GetByIdTrackedAsync(
+    Guid id,
+    string userId,
+    CancellationToken cancellationToken = default)
+    {
+        return await _context.Tasks
+            .Where(t => t.Id == id && t.UserId == userId)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<TaskItem> CreateAsync(
         TaskItem task,
         CancellationToken cancellationToken = default)

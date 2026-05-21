@@ -9,6 +9,7 @@ using TaskFlow.Core.Entities;
 using TaskFlow.Core.Interfaces;
 using TaskFlow.Core.Options;
 using TaskFlow.Infrastructure.Data;
+using TaskFlow.Infrastructure.Repositories;
 using TaskFlow.Infrastructure.Services; // Add this if you need to reference SwaggerUIOptions
 
 
@@ -91,6 +92,8 @@ builder.Services.AddAuthentication(options =>
 
 // ── Services ────────────────────────────────────────────────
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 // ── Swagger ────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
